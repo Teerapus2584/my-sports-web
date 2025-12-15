@@ -4,408 +4,225 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Admin Panel - Sports Results</title>
+
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600&display=swap" rel="stylesheet">
+
   <style>
     :root{--purple:#6d28d9; --muted:#f3f0ff;}
     body{font-family:"Prompt",sans-serif;margin:0;background:var(--muted);color:#111}
     header{background:var(--purple); color:#fff; padding:18px 22px; display:flex; justify-content:space-between; align-items:center;}
     header h1{margin:0;font-size:18px;}
-    .wrap{display:flex; gap:20px; padding:24px; max-width:1200px; margin:20px auto;}
-    .sidebar{width:360px; background:#fff; padding:18px; border-radius:12px; box-shadow:0 6px 20px rgba(50,50,93,0.06);}
-    .main{flex:1; background:#fff; padding:18px; border-radius:12px; box-shadow:0 6px 20px rgba(50,50,93,0.06);}
-    label{display:block;margin-top:10px;font-size:14px;color:#333}
-    input[type="text"], input[type="date"], input[type="number"], select, input[type="file"]{
-      width:100%; padding:10px; margin-top:6px; border-radius:8px; border:1px solid #ddd; font-size:14px;
+
+    .wrap{display:flex; gap:20px; padding:24px; max-width:1200px; margin:auto;}
+    .sidebar{width:360px; background:#fff; padding:18px; border-radius:14px; box-shadow:0 6px 20px rgba(0,0,0,0.08);}
+    .main{flex:1; background:#fff; padding:18px; border-radius:14px; box-shadow:0 6px 20px rgba(0,0,0,0.08);}
+
+    label{display:block;margin-top:12px;font-size:14px;color:#333}
+    input, select{
+      width:100%; padding:11px; margin-top:6px;
+      border-radius:10px; border:1px solid #ddd; font-size:14px;
     }
-    button{padding:10px 12px;border-radius:8px;border:none;cursor:pointer}
-    .btn-add{background:#059669;color:#fff;width:100%; margin-top:12px;font-weight:600}
-    .match-list{margin-top:10px}
-    table{width:100%; border-collapse:collapse}
-    th,td{padding:12px;border-bottom:1px solid #eee;text-align:left;font-size:14px; vertical-align: middle}
-    .actions button{margin-right:8px}
-    .btn-edit{background:#111827;color:#fff;padding:6px 8px;border-radius:6px}
-    .btn-delete{background:#ef4444;color:#fff;padding:6px 8px;border-radius:6px}
-    .logout{background:#f59e0b;color:#fff;padding:8px 10px;border-radius:8px}
-    .muted{color:#666;font-size:13px;margin-top:8px}
-    .small{font-size:13px;color:#444}
-    .status{display:block;font-size:13px;color:#666;margin-top:6px}
-    .row-actions{display:flex; gap:6px; align-items:center}
-    .topbar-right{display:flex; gap:8px; align-items:center}
-    .badge{background:#eef2ff;color:#4b0082;padding:6px 8px;border-radius:8px;font-weight:600}
-    .logo-thumb{width:36px;height:36px;object-fit:cover;border-radius:6px;border:1px solid #e6e6e6}
+
+    button{padding:10px 14px;border-radius:10px;border:none;cursor:pointer}
+    .btn-add{background:#059669;color:#fff;width:100%; margin-top:16px;font-weight:600}
+
+    table{width:100%; border-collapse:collapse; margin-top:10px}
+    th,td{padding:12px;border-bottom:1px solid #eee;font-size:14px;vertical-align:middle}
+    th{background:#fafafa}
+
     .team-cell{display:flex;align-items:center;gap:8px}
+    .logo-thumb{width:36px;height:36px;object-fit:cover;border-radius:8px;border:1px solid #eee}
+
+    .btn-edit{background:#111827;color:#fff;padding:6px 10px;border-radius:8px}
+    .btn-delete{background:#ef4444;color:#fff;padding:6px 10px;border-radius:8px}
+
+    .muted{color:#666;font-size:13px;margin-top:10px}
+    .small{font-size:13px;color:#555}
+
+    .topbar-right{display:flex;gap:10px}
+    .badge{background:#eef2ff;color:#4b0082;padding:6px 10px;border-radius:999px;font-weight:600}
+    .logout{background:#f59e0b;color:#fff}
+
+    /* custom sport */
+    #customSportWrap{display:none;margin-top:8px}
+
     /* modal */
-    .modal{position:fixed; left:0; top:0; right:0; bottom:0; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.4); z-index:50}
-    .modal-box{background:#fff;padding:18px;border-radius:12px; width:520px; box-shadow:0 8px 40px rgba(0,0,0,0.15)}
-    .flex-row{display:flex; gap:8px}
-    .flex-1{flex:1}
-    .note-small{font-size:12px;color:#666;margin-top:6px}
+    .modal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.45);z-index:50}
+    .modal-box{background:#fff;padding:20px;border-radius:14px;width:520px;max-width:92%}
+
+    @media(max-width:768px){
+      .wrap{flex-direction:column}
+      .sidebar{width:100%}
+    }
   </style>
 </head>
+
 <body>
 
-  <header>
-    <h1>Admin Panel — Sports Results</h1>
-    <div class="topbar-right">
-      <div class="badge" id="totalBadge">Matches: 0</div>
-      <button id="openDashboard" class="logout" title="ดูหน้า Dashboard">Preview</button>
-      <button id="logoutBtn" class="logout">Logout</button>
-    </div>
-  </header>
-
-  <div class="wrap">
-    <!-- Sidebar: ฟอร์มเพิ่มแมตช์ -->
-    <aside class="sidebar">
-      <h3 class="small">เพิ่ม/แก้แมตช์</h3>
-
-      <label>วันที่</label>
-      <input id="dateInput" type="date">
-
-      <label>กีฬา</label>
-      <select id="sportInput">
-        <option>Football</option>
-        <option>Basketball</option>
-        <option>Tennis</option>
-        <option>Volleyball</option>
-        <option>Badminton</option>
-        <option>Esports</option>
-        <option>อื่นๆ</option>
-      </select>
-
-      <label>Team A (พิมพ์ชื่อเอง)</label>
-      <input id="teamAInput" placeholder="เช่น Team Red">
-
-      <label>โลโก้ทีม A (ไฟล์ .png/.jpg)</label>
-      <input id="logoAInput" type="file" accept="image/*">
-      <div class="note-small">ขนาดแนะนำไม่เกิน 200KB เพื่อประหยัดพื้นที่ localStorage</div>
-
-      <label>Team B (พิมพ์ชื่อเอง)</label>
-      <input id="teamBInput" placeholder="เช่น Team Blue">
-
-      <label>โลโก้ทีม B (ไฟล์ .png/.jpg)</label>
-      <input id="logoBInput" type="file" accept="image/*">
-
-      <label>คะแนน / ผล (ถ้ามี)</label>
-      <div style="display:flex; gap:8px;">
-        <input id="scoreA" type="number" placeholder="A" style="flex:1">
-        <input id="scoreB" type="number" placeholder="B" style="flex:1">
-      </div>
-
-      <label>สถานะ</label>
-      <select id="statusInput">
-        <option value="upcoming">upcoming</option>
-        <option value="live">live</option>
-        <option value="finished">finished</option>
-        <option value="postponed">postponed</option>
-      </select>
-
-      <button class="btn-add" id="addBtn">เพิ่มแมตช์</button>
-
-      <div class="muted">ข้อมูลจะถูกบันทึกในเครื่อง (localStorage) — สำหรับเดโม ถ้าต้องการออนไลน์ให้บอกผมผมต่อ Firebase ให้ได้</div>
-    </aside>
-
-    <!-- Main: ตารางแมตช์ -->
-    <main class="main">
-      <div style="display:flex; justify-content:space-between; align-items:center;">
-        <h2 style="margin:0">รายการแข่งขัน</h2>
-        <div class="small">คลิก <strong>แก้ไข</strong> เพื่อเปลี่ยนผลหรือรายละเอียด</div>
-      </div>
-
-      <div class="match-list">
-        <table id="matchesTable">
-          <thead>
-            <tr>
-              <th>วันที่</th>
-              <th>กีฬา</th>
-              <th>ทีม A</th>
-              <th>ทีม B</th>
-              <th>ผล</th>
-              <th>สถานะ</th>
-              <th>จัดการ</th>
-            </tr>
-          </thead>
-          <tbody id="matchesBody"></tbody>
-        </table>
-      </div>
-    </main>
+<header>
+  <h1>Admin Panel — Sports Results</h1>
+  <div class="topbar-right">
+    <div class="badge" id="totalBadge">Matches: 0</div>
+    <button id="openDashboard" class="logout">Preview</button>
+    <button id="logoutBtn" class="logout">Logout</button>
   </div>
+</header>
 
-  <!-- Modal แก้ไข -->
-  <div id="editModal" style="display:none" class="modal" aria-hidden="true">
-    <div class="modal-box">
-      <h3>แก้ไขแมตช์</h3>
-      <label>วันที่</label>
-      <input id="editDate" type="date">
-      <label>กีฬา</label>
-      <input id="editSport" placeholder="กีฬา">
-      <label>Team A</label>
-      <input id="editTeamA">
-      <label>โลโก้ทีม A (เปลี่ยนได้)</label>
-      <input id="editLogoA" type="file" accept="image/*">
-      <label>Team B</label>
-      <input id="editTeamB">
-      <label>โลโก้ทีม B (เปลี่ยนได้)</label>
-      <input id="editLogoB" type="file" accept="image/*">
-      <div style="display:flex; gap:8px; margin-top:8px;">
-        <input id="editScoreA" type="number" placeholder="A" style="flex:1">
-        <input id="editScoreB" type="number" placeholder="B" style="flex:1">
-      </div>
-      <label>สถานะ</label>
-      <select id="editStatus">
-        <option value="upcoming">upcoming</option>
-        <option value="live">live</option>
-        <option value="finished">finished</option>
-        <option value="postponed">postponed</option>
-      </select>
+<div class="wrap">
 
-      <div style="display:flex; gap:8px; margin-top:12px; justify-content:flex-end;">
-        <button id="saveEdit" class="btn-edit">บันทึก</button>
-        <button id="closeEdit" class="btn-delete">ยกเลิก</button>
-      </div>
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <h3 class="small">เพิ่ม / แก้แมตช์</h3>
+
+    <label>วันที่</label>
+    <input id="dateInput" type="date">
+
+    <label>กีฬา</label>
+    <select id="sportInput">
+      <option value="Football">Football</option>
+      <option value="Basketball">Basketball</option>
+      <option value="Tennis">Tennis</option>
+      <option value="Volleyball">Volleyball</option>
+      <option value="Badminton">Badminton</option>
+      <option value="Esports">Esports</option>
+      <option value="other">อื่นๆ</option>
+    </select>
+
+    <!-- custom sport -->
+    <div id="customSportWrap">
+      <label>ระบุชนิดกีฬา</label>
+      <input id="customSportInput" placeholder="เช่น Futsal, Table Tennis">
     </div>
-  </div>
+
+    <label>Team A</label>
+    <input id="teamAInput">
+
+    <label>โลโก้ทีม A</label>
+    <input id="logoAInput" type="file" accept="image/*">
+
+    <label>Team B</label>
+    <input id="teamBInput">
+
+    <label>โลโก้ทีม B</label>
+    <input id="logoBInput" type="file" accept="image/*">
+
+    <label>คะแนน</label>
+    <div style="display:flex;gap:8px">
+      <input id="scoreA" type="number" placeholder="A">
+      <input id="scoreB" type="number" placeholder="B">
+    </div>
+
+    <label>สถานะ</label>
+    <select id="statusInput">
+      <option value="upcoming">upcoming</option>
+      <option value="live">live</option>
+      <option value="finished">finished</option>
+      <option value="postponed">postponed</option>
+    </select>
+
+    <button class="btn-add" id="addBtn">เพิ่มแมตช์</button>
+
+    <div class="muted">ข้อมูลเก็บใน localStorage (เดโม)</div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <h2>รายการแข่งขัน</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>วันที่</th>
+          <th>กีฬา</th>
+          <th>ทีม A</th>
+          <th>ทีม B</th>
+          <th>ผล</th>
+          <th>สถานะ</th>
+          <th>จัดการ</th>
+        </tr>
+      </thead>
+      <tbody id="matchesBody"></tbody>
+    </table>
+  </main>
+
+</div>
 
 <script>
-  // key สำหรับเก็บ matches
-  const STORE_KEY = "sr_matches_v1";
+const STORE_KEY = "sr_matches_v1";
 
-  // ตรวจสอบล็อกอิน (demo)
-  if(sessionStorage.getItem("isAdmin") !== "1") {
-    alert("ต้องล็อกอินเป็นแอดมินก่อน");
-    location.href = "login.html";
+function uid(){return Math.random().toString(36).slice(2,9);}
+function loadMatches(){return JSON.parse(localStorage.getItem(STORE_KEY)||"[]");}
+function saveMatches(d){localStorage.setItem(STORE_KEY,JSON.stringify(d));}
+
+const sportSelect=document.getElementById("sportInput");
+const customWrap=document.getElementById("customSportWrap");
+const customInput=document.getElementById("customSportInput");
+
+sportSelect.addEventListener("change",()=>{
+  customWrap.style.display = sportSelect.value==="other"?"block":"none";
+});
+
+document.getElementById("addBtn").onclick=()=>{
+  const sport = sportSelect.value==="other"
+    ? customInput.value || "อื่นๆ"
+    : sportSelect.value;
+
+  const match={
+    id:uid(),
+    date:dateInput.value,
+    sport,
+    teamA:teamAInput.value,
+    teamB:teamBInput.value,
+    scoreA:scoreA.value,
+    scoreB:scoreB.value,
+    status:statusInput.value
+  };
+
+  if(!match.teamA || !match.teamB){
+    alert("กรอกชื่อทีมให้ครบ");
+    return;
   }
 
-  // helper uid
-  function uid(){ return Math.random().toString(36).slice(2,9); }
-
-  // โหลด matches
-  function loadMatches(){
-    try {
-      return JSON.parse(localStorage.getItem(STORE_KEY) || "[]");
-    } catch(e) {
-      console.error("parse error", e);
-      return [];
-    }
-  }
-
-  // บันทึก matches และ trigger last_update
-  function saveMatches(list){
-    localStorage.setItem(STORE_KEY, JSON.stringify(list));
-    localStorage.setItem("sr_last_update", Date.now());
-  }
-
-  // แปลงไฟล์เป็น dataURL (Promise)
-  function fileToDataURL(file){
-    return new Promise((res, rej) => {
-      if(!file) return res(null);
-      const r = new FileReader();
-      r.onload = () => res(r.result);
-      r.onerror = () => rej("file read error");
-      r.readAsDataURL(file);
-    });
-  }
-
-  // render ตาราง
-  function render(){
-    const body = document.getElementById("matchesBody");
-    const list = loadMatches().sort((a,b)=> new Date(a.date) - new Date(b.date));
-    body.innerHTML = "";
-    list.forEach(m=>{
-      const tr = document.createElement("tr");
-
-      const scoreText = (m.scoreA !== "" && m.scoreA !== undefined && m.scoreA !== null) ? `${m.scoreA} - ${m.scoreB}` : "-";
-      tr.innerHTML = `
-        <td style="min-width:100px">${m.date || ""}</td>
-        <td style="min-width:110px">${m.sport || ""}</td>
-        <td>
-          <div class="team-cell">
-            ${m.logoA ? `<img src="${m.logoA}" class="logo-thumb" alt="logoA">` : ""}
-            <div>${m.teamA || ""}</div>
-          </div>
-        </td>
-        <td>
-          <div class="team-cell">
-            ${m.logoB ? `<img src="${m.logoB}" class="logo-thumb" alt="logoB">` : ""}
-            <div>${m.teamB || ""}</div>
-          </div>
-        </td>
-        <td>${scoreText}</td>
-        <td><span class="small">${m.status || ""}</span></td>
-        <td class="row-actions">
-          <button class="btn-edit" data-id="${m.id}">แก้ไข</button>
-          <button class="btn-delete" data-id="${m.id}">ลบ</button>
-        </td>
-      `;
-      body.appendChild(tr);
-    });
-
-    document.getElementById("totalBadge").textContent = `Matches: ${list.length}`;
-  }
-
-  // add new match (async to await file reads)
-  document.getElementById("addBtn").addEventListener("click", async ()=>{
-    const date = document.getElementById("dateInput").value || new Date().toISOString().slice(0,10);
-    const sport = document.getElementById("sportInput").value;
-    const teamA = document.getElementById("teamAInput").value.trim();
-    const teamB = document.getElementById("teamBInput").value.trim();
-    const scoreAVal = document.getElementById("scoreA").value;
-    const scoreBVal = document.getElementById("scoreB").value;
-    const status = document.getElementById("statusInput").value;
-
-    if(!teamA || !teamB){
-      alert("กรุณากรอกชื่อทีมทั้งสอง");
-      return;
-    }
-
-    // read files
-    const fileA = document.getElementById("logoAInput").files[0];
-    const fileB = document.getElementById("logoBInput").files[0];
-
-    try {
-      const logoA = await fileToDataURL(fileA);
-      const logoB = await fileToDataURL(fileB);
-
-      const list = loadMatches();
-      list.push({
-        id: uid(),
-        date,
-        sport,
-        teamA,
-        teamB,
-        logoA: logoA || "",
-        logoB: logoB || "",
-        scoreA: scoreAVal === "" ? "" : Number(scoreAVal),
-        scoreB: scoreBVal === "" ? "" : Number(scoreBVal),
-        status: status || "upcoming",
-        updatedAt: new Date().toISOString()
-      });
-      saveMatches(list);
-      render();
-
-      // clear inputs
-      document.getElementById("teamAInput").value = "";
-      document.getElementById("teamBInput").value = "";
-      document.getElementById("logoAInput").value = "";
-      document.getElementById("logoBInput").value = "";
-      document.getElementById("scoreA").value = "";
-      document.getElementById("scoreB").value = "";
-
-      alert("เพิ่มการแข่งขันสำเร็จ!");
-    } catch(err){
-      console.error(err);
-      alert("เกิดข้อผิดพลาดขณะอ่านไฟล์รูป กรุณาลองอีกครั้ง");
-    }
-  });
-
-  // delegate edit/delete buttons
-  document.getElementById("matchesBody").addEventListener("click", (e)=>{
-    const id = e.target.getAttribute("data-id");
-    if(!id) return;
-    if(e.target.classList.contains("btn-delete")){
-      if(!confirm("ต้องการลบแมตช์นี้จริงหรือ?")) return;
-      let list = loadMatches().filter(m=>m.id !== id);
-      saveMatches(list);
-      render();
-    } else if(e.target.classList.contains("btn-edit")){
-      openEditModal(id);
-    }
-  });
-
-  // modal logic (with file support)
-  let editingId = null;
-  function openEditModal(id){
-    const list = loadMatches();
-    const m = list.find(x=>x.id === id);
-    if(!m) return;
-    editingId = id;
-    document.getElementById("editDate").value = m.date || "";
-    document.getElementById("editSport").value = m.sport || "";
-    document.getElementById("editTeamA").value = m.teamA || "";
-    document.getElementById("editTeamB").value = m.teamB || "";
-    document.getElementById("editScoreA").value = (m.scoreA !== undefined && m.scoreA !== null) ? m.scoreA : "";
-    document.getElementById("editScoreB").value = (m.scoreB !== undefined && m.scoreB !== null) ? m.scoreB : "";
-    document.getElementById("editStatus").value = m.status || "upcoming";
-    // clear file inputs for edit (user can choose new files)
-    document.getElementById("editLogoA").value = "";
-    document.getElementById("editLogoB").value = "";
-    document.getElementById("editModal").style.display = "flex";
-    document.getElementById("editModal").setAttribute("aria-hidden","false");
-  }
-
-  document.getElementById("closeEdit").addEventListener("click", ()=>{
-    document.getElementById("editModal").style.display = "none";
-    document.getElementById("editModal").setAttribute("aria-hidden","true");
-    editingId = null;
-  });
-
-  document.getElementById("saveEdit").addEventListener("click", async ()=>{
-    if(!editingId) return;
-    const list = loadMatches();
-    const idx = list.findIndex(x=>x.id === editingId);
-    if(idx === -1) return;
-
-    // read potential new logos
-    const fileA = document.getElementById("editLogoA").files[0];
-    const fileB = document.getElementById("editLogoB").files[0];
-
-    try {
-      const logoAData = await fileToDataURL(fileA);
-      const logoBData = await fileToDataURL(fileB);
-
-      list[idx].date = document.getElementById("editDate").value || list[idx].date;
-      list[idx].sport = document.getElementById("editSport").value;
-      list[idx].teamA = document.getElementById("editTeamA").value;
-      list[idx].teamB = document.getElementById("editTeamB").value;
-
-      const sA = document.getElementById("editScoreA").value;
-      const sB = document.getElementById("editScoreB").value;
-      list[idx].scoreA = sA === "" ? "" : Number(sA);
-      list[idx].scoreB = sB === "" ? "" : Number(sB);
-
-      list[idx].status = document.getElementById("editStatus").value;
-      if(logoAData) list[idx].logoA = logoAData;
-      if(logoBData) list[idx].logoB = logoBData;
-
-      list[idx].updatedAt = new Date().toISOString();
-      saveMatches(list);
-      render();
-      document.getElementById("editModal").style.display = "none";
-      document.getElementById("editModal").setAttribute("aria-hidden","true");
-      editingId = null;
-    } catch(err){
-      console.error(err);
-      alert("เกิดข้อผิดพลาดขณะอ่านไฟล์รูป กรุณาลองอีกครั้ง");
-    }
-  });
-
-  // logout
-  document.getElementById("logoutBtn").addEventListener("click", ()=>{
-    sessionStorage.removeItem("isAdmin");
-    location.href = "login.html";
-  });
-
-  // preview dashboard
-  document.getElementById("openDashboard").addEventListener("click", ()=>{
-    window.open("dashboard.html", "_blank");
-  });
-
-  // listen storage event (ถ้ามีการแก้ข้ามแท็บ)
-  window.addEventListener("storage", (e)=>{
-    if(e.key === "sr_last_update" || e.key === STORE_KEY) {
-      render();
-    }
-  });
-
-  // init sample if empty (optional)
-  if(!localStorage.getItem(STORE_KEY) || loadMatches().length === 0){
-    const sample = [
-      { id: uid(), date: new Date().toISOString().slice(0,10), sport:"Football", teamA:"Team Red", teamB:"Team Blue", logoA:"", logoB:"", scoreA:"", scoreB:"", status:"upcoming", updatedAt:new Date().toISOString() },
-      { id: uid(), date: new Date(Date.now()+86400000).toISOString().slice(0,10), sport:"Basketball", teamA:"Hoopers", teamB:"Slam", logoA:"", logoB:"", scoreA:"", scoreB:"", status:"upcoming", updatedAt:new Date().toISOString() }
-    ];
-    saveMatches(sample);
-  }
-
-  // initial render
+  const list=loadMatches();
+  list.push(match);
+  saveMatches(list);
   render();
+
+  teamAInput.value=teamBInput.value=scoreA.value=scoreB.value="";
+  customInput.value="";
+  customWrap.style.display="none";
+  sportSelect.value="Football";
+};
+
+function render(){
+  const body=document.getElementById("matchesBody");
+  body.innerHTML="";
+  const list=loadMatches();
+  list.forEach(m=>{
+    body.innerHTML+=`
+      <tr>
+        <td>${m.date||""}</td>
+        <td>${m.sport}</td>
+        <td>${m.teamA}</td>
+        <td>${m.teamB}</td>
+        <td>${m.scoreA||"-"} - ${m.scoreB||"-"}</td>
+        <td>${m.status}</td>
+        <td>
+          <button class="btn-delete" onclick="del('${m.id}')">ลบ</button>
+        </td>
+      </tr>`;
+  });
+  totalBadge.textContent="Matches: "+list.length;
+}
+
+function del(id){
+  if(confirm("ลบจริงไหม")){
+    saveMatches(loadMatches().filter(m=>m.id!==id));
+    render();
+  }
+}
+
+render();เระ
 </script>
 
 </body>
