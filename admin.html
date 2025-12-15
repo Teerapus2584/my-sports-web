@@ -221,7 +221,13 @@ function del(id){
     render();
   }
 }
-
+document.getElementById("openDashboard").addEventListener("click", () => {
+  window.open("dashboard.html", "_blank");
+});
+document.getElementById("logoutBtn").addEventListener("click", () => {
+  sessionStorage.removeItem("isAdmin");
+  location.href = "index.html";
+});
 render();เระ
 </script>
 
